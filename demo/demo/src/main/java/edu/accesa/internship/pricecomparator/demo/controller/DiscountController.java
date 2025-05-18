@@ -25,4 +25,9 @@ public class DiscountController {
     public List<DiscountDTO> getBestDiscounts() {
         return discountService.getBestDiscounts();
     }
+
+    @GetMapping("/new")
+    public List<DiscountDTO> getNewDiscounts() {
+        return discountService.getNewDiscounts();
+    }
 }

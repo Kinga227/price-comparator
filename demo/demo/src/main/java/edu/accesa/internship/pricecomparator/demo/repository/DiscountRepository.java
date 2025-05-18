@@ -1,7 +1,6 @@
 package edu.accesa.internship.pricecomparator.demo.repository;
 
 import edu.accesa.internship.pricecomparator.demo.model.Discount;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -17,4 +16,11 @@ public interface DiscountRepository extends JpaRepository<Discount, String> {
         ORDER BY d.percentage DESC
     """)
     List<Discount> findBestDiscounts(@Param("now") LocalDate now);
+
+    @Query("""
+        SELECT d FROM Discount d
+        WHERE d.startDate = :yesterday OR d.startDate = :now
+        ORDER BY d.startDate DESC
+    """)
+    List<Discount> findNewDiscounts(@Param("yesterday") LocalDate yesterday, @Param("now") LocalDate now);
 }

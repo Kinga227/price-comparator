@@ -2,10 +2,8 @@ package edu.accesa.internship.pricecomparator.demo.service;
 
 import edu.accesa.internship.pricecomparator.demo.dto.DiscountDTO;
 import edu.accesa.internship.pricecomparator.demo.mapper.DiscountMapper;
-import edu.accesa.internship.pricecomparator.demo.model.Discount;
 import edu.accesa.internship.pricecomparator.demo.repository.DiscountRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -25,9 +23,17 @@ public class DiscountService {
                 .toList();
     }
 
-        public List<DiscountDTO> getBestDiscounts() {
-        System.out.println("Getting best discounts");
+    public List<DiscountDTO> getBestDiscounts() {
         return discountRepository.findBestDiscounts(LocalDate.now())
+                .stream()
+                .map(discountMapper::modelToDto)
+                .toList();
+    }
+
+    public List<DiscountDTO> getNewDiscounts() {
+        LocalDate today = LocalDate.now();
+        LocalDate yesterday = today.minusDays(1);
+        return discountRepository.findNewDiscounts(yesterday, today)
                 .stream()
                 .map(discountMapper::modelToDto)
                 .toList();
