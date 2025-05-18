@@ -9,12 +9,12 @@ import org.springframework.data.repository.query.Param;
 import java.time.LocalDate;
 import java.util.List;
 
-public interface DiscountRepository extends JpaRepository<Discount, Long> {
+public interface DiscountRepository extends JpaRepository<Discount, String> {
 
     @Query("""
         SELECT d FROM Discount d
         WHERE :now BETWEEN d.startDate AND d.endDate
         ORDER BY d.percentage DESC
     """)
-    List<Discount> findBestDiscounts(@Param("now") LocalDate now, Pageable pageable);
+    List<Discount> findBestDiscounts(@Param("now") LocalDate now);
 }

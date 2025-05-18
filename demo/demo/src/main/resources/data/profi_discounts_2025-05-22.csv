@@ -1,0 +1,14 @@
+product_id;product_name;brand;package_quantity;package_unit;product_category;from_date;to_date;percentage_of_discount
+P001;lapte zuzu;Zuzu;1;l;lactate;2025-05-22;2025-05-28;9
+P010;brânză telemea;Proxi;0.3;kg;lactate;2025-05-22;2025-05-28;11
+P019;piept pui;Avicola;1;kg;carne;2025-05-22;2025-05-28;9
+P023;zahăr tos;Proxi;1;kg;alimente de bază;2025-05-22;2025-05-28;5
+P033;biscuiți cu unt;RoStar;0.2;kg;gustări;2025-05-22;2025-05-28;8
+P036;cafea măcinată;Tchibo;0.25;kg;cafea;2025-05-22;2025-05-28;14
+P042;șampon păr gras;Schauma;400;ml;îngrijire personală;2025-05-22;2025-05-28;9
+P048;piper negru măcinat;Kamis;50;g;condimente;2025-05-22;2025-05-28;7
+P054;ciocolată neagră 70%;Poiana;100;g;gustări;2025-05-22;2025-05-28;11
+P059;morcovi;Generic;0.5;kg;legume și fructe;2025-05-22;2025-05-28;7
+P067;orez bob lung;Deroni;1;kg;alimente de bază;2025-05-22;2025-05-28;10
+P068;iaurt de băut;Activia;0.33;kg;lactate;2025-05-22;2025-05-28;12
+P069;pastă de dinți;Colgate;100;ml;îngrijire personală;2025-05-22;2025-05-28;17
