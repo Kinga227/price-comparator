@@ -75,4 +75,14 @@ public class DiscountControllerIntegrationTest {
                 .andExpect(jsonPath("$[0].percentage").value(40))
                 .andExpect(jsonPath("$[0].productId").value("p1"));
     }
+
+    @Test
+    void getNewDiscounts_shouldReturnRecentlyStartedDiscounts() throws Exception {
+        mockMvc.perform(get("/api/discounts/new")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].productId").value("p1"))
+                .andExpect(jsonPath("$[0].percentage").value(40))
+                .andExpect(jsonPath("$[0].startDate").value(LocalDate.now().minusDays(1).toString()));
+    }
 }

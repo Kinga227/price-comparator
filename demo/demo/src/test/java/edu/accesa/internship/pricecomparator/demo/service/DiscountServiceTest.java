@@ -76,4 +76,28 @@ public class DiscountServiceTest {
         verify(discountRepository).findBestDiscounts(any(LocalDate.class));
         verify(discountMapper).modelToDto(discount);
     }
+
+    @Test
+    void getNewDiscounts_shouldReturnDiscountsStartedTodayOfYesterday() {
+        Discount discount = new Discount();
+        discount.setPercentage(30);
+        discount.setStartDate(LocalDate.now());
+
+        DiscountDTO dto = new DiscountDTO();
+        dto.setPercentage(30);
+        dto.setStartDate(LocalDate.now());
+
+        when(discountRepository.findNewDiscounts(any(LocalDate.class), any(LocalDate.class)))
+                .thenReturn(List.of(discount));
+        when(discountMapper.modelToDto(discount)).thenReturn(dto);
+
+        List<DiscountDTO> result = discountService.getNewDiscounts();
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals(30, result.get(0).getPercentage());
+
+        verify(discountRepository).findNewDiscounts(any(LocalDate.class), any(LocalDate.class));
+        verify(discountMapper).modelToDto(discount);
+    }
 }
