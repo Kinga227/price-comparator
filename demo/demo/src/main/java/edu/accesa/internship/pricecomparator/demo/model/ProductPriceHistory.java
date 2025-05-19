@@ -17,10 +17,13 @@ public class ProductPriceHistory {
     private Long id;
 
     private String productId;
+    private String name;
     private String store;
     private LocalDate date;
     private Double originalPrice;
     private Integer discountPercentage;
     private Double discountedPrice;
     private String currency;
+    private String category;
+    private String brand;
 }

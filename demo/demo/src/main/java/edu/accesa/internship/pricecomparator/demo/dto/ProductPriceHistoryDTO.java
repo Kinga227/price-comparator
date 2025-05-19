@@ -9,10 +9,13 @@ import java.time.LocalDate;
 @AllArgsConstructor
 public class ProductPriceHistoryDTO {
 
+    private String name;
     private LocalDate date;
     private Double originalPrice;
     private Integer discountPercentage;
     private Double discountedPrice;
     private String currency;
     private String store;
+    private String category;
+    private String brand;
 }

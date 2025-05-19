@@ -5,10 +5,7 @@ import edu.accesa.internship.pricecomparator.demo.model.Product;
 import edu.accesa.internship.pricecomparator.demo.repository.ProductPriceHistoryRepository;
 import edu.accesa.internship.pricecomparator.demo.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -30,12 +27,37 @@ public class ProductController {
         return productPriceHistoryRepository.findByProductIdOrderByDate(productId)
                 .stream()
                 .map(history -> new ProductPriceHistoryDTO(
+                        history.getName(),
                         history.getDate(),
                         history.getOriginalPrice(),
                         history.getDiscountPercentage(),
                         history.getDiscountedPrice(),
                         history.getCurrency(),
-                        history.getStore()
+                        history.getStore(),
+                        history.getCategory(),
+                        history.getBrand()
+                ))
+                .toList();
+    }
+
+    @GetMapping("/price-history")
+    public List<ProductPriceHistoryDTO> getPriceHistoryByFilters(
+            @RequestParam(required = false) String store,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String brand
+    ) {
+        return productPriceHistoryRepository.findByFilters(store, category, brand)
+                .stream()
+                .map(history -> new ProductPriceHistoryDTO(
+                        history.getName(),
+                        history.getDate(),
+                        history.getOriginalPrice(),
+                        history.getDiscountPercentage(),
+                        history.getDiscountedPrice(),
+                        history.getCurrency(),
+                        history.getStore(),
+                        history.getCategory(),
+                        history.getBrand()
                 ))
                 .toList();
     }

@@ -157,6 +157,9 @@ public class CSVImporter {
 
                     double price = Double.parseDouble(record.get(6));
                     String currency = record.get(7);
+                    String name = record.get(1);
+                    String category = record.get(2);
+                    String brand = record.get(3);
 
                     // check valid discount
                     Discount validDiscount = discountMap.getOrDefault(key, new ArrayList<>()).stream()
@@ -167,10 +170,13 @@ public class CSVImporter {
                     // save price in history
                     ProductPriceHistory history = new ProductPriceHistory();
                     history.setProductId(product.getId());
+                    history.setName(name);
                     history.setStore(store);
                     history.setDate(fileDate);
                     history.setOriginalPrice(price);
                     history.setCurrency(currency);
+                    history.setCategory(category);
+                    history.setBrand(brand);
 
                     if (validDiscount != null) {
                         double discountedPrice = price * (1 - validDiscount.getPercentage() / 100.0);
