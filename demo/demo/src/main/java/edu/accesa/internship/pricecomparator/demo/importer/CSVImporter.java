@@ -1,8 +1,11 @@
 package edu.accesa.internship.pricecomparator.demo.importer;
 
+import edu.accesa.internship.pricecomparator.demo.dto.DiscountDTO;
 import edu.accesa.internship.pricecomparator.demo.model.Discount;
 import edu.accesa.internship.pricecomparator.demo.model.Product;
+import edu.accesa.internship.pricecomparator.demo.model.ProductPriceHistory;
 import edu.accesa.internship.pricecomparator.demo.repository.DiscountRepository;
+import edu.accesa.internship.pricecomparator.demo.repository.ProductPriceHistoryRepository;
 import edu.accesa.internship.pricecomparator.demo.repository.ProductRepository;
 import jakarta.annotation.PostConstruct;
 import jakarta.transaction.Transactional;
@@ -17,7 +20,9 @@ import org.springframework.stereotype.Component;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Component
@@ -27,6 +32,7 @@ public class CSVImporter {
     private final ResourceLoader resourceLoader;
     private final ProductRepository productRepository;
     private final DiscountRepository discountRepository;
+    private final ProductPriceHistoryRepository productPriceHistoryRepository;
 
     private final String[] productFiles = {
             "classpath:data/kaufland_2025-05-01.csv",
@@ -62,10 +68,12 @@ public class CSVImporter {
     @Transactional
     public void importCSVData() throws Exception {
         Map<String, Product> productMap = new HashMap<>();
+        Map<String, List<Discount>> discountMap = new HashMap<>();
 
         // read and save products
         for (String productFile : productFiles) {
             String store = extractStoreName(productFile);
+            LocalDate fileDate = extractDateFromFilename(productFile);
             Resource resource = resourceLoader.getResource(productFile);
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(resource.getInputStream()))) {
                 // first line is the header
@@ -119,11 +127,64 @@ public class CSVImporter {
                     discount.setPercentage(Integer.parseInt(record.get(8)));
 
                     discountRepository.save(discount);
+                    discountMap.computeIfAbsent(key, k -> new ArrayList<>()).add(discount);
                 }
             }
         }
 
         System.out.println("CSV data imported.");
+
+        // save price history with discounts
+        for (String productFile : productFiles) {
+            String store = extractStoreName(productFile);
+            LocalDate fileDate = extractDateFromFilename(productFile);
+            Resource resource = resourceLoader.getResource(productFile);
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(resource.getInputStream()))) {
+                reader.readLine();
+
+                CSVParser csvParser = CSVFormat.DEFAULT
+                        .withDelimiter(';')
+                        .withTrim()
+                        .parse(reader);
+
+                for (CSVRecord record : csvParser) {
+                    String id = record.get(0);
+                    if (id.isBlank()) continue;
+
+                    String key = store + "_" + id;
+                    Product product = productMap.get(key);
+                    if (product == null) continue;
+
+                    double price = Double.parseDouble(record.get(6));
+                    String currency = record.get(7);
+
+                    // check valid discount
+                    Discount validDiscount = discountMap.getOrDefault(key, new ArrayList<>()).stream()
+                            .filter(d -> !d.getStartDate().isAfter(fileDate) && !d.getEndDate().isBefore(fileDate))
+                            .findFirst()
+                            .orElse(null);
+
+                    // save price in history
+                    ProductPriceHistory history = new ProductPriceHistory();
+                    history.setProductId(product.getId());
+                    history.setStore(store);
+                    history.setDate(fileDate);
+                    history.setOriginalPrice(price);
+                    history.setCurrency(currency);
+
+                    if (validDiscount != null) {
+                        double discountedPrice = price * (1 - validDiscount.getPercentage() / 100.0);
+                        history.setDiscountPercentage(validDiscount.getPercentage());
+                        history.setDiscountedPrice(discountedPrice);
+                    } else {
+                        history.setDiscountPercentage(null);
+                        history.setDiscountedPrice(null);
+                    }
+
+                    productPriceHistoryRepository.save(history);
+                }
+            }
+        }
     }
 
     private static Product getProduct(CSVRecord record, String id, String store) {
@@ -143,5 +204,11 @@ public class CSVImporter {
     private String extractStoreName(String path) {
         String fileName = path.substring(path.lastIndexOf('/') + 1);
         return fileName.substring(0, fileName.indexOf('_'));
+    }
+
+    private LocalDate extractDateFromFilename(String path) {
+        String fileName = path.substring(path.lastIndexOf('/') + 1);
+        String datePart = fileName.replaceAll("[^0-9\\-]", "");
+        return LocalDate.parse(datePart);
     }
 }
