@@ -1,8 +1,6 @@
 package edu.accesa.internship.pricecomparator.demo.controller;
 
 import edu.accesa.internship.pricecomparator.demo.dto.DiscountDTO;
-import edu.accesa.internship.pricecomparator.demo.dto.ProductPriceHistoryDTO;
-import edu.accesa.internship.pricecomparator.demo.repository.ProductPriceHistoryRepository;
 import edu.accesa.internship.pricecomparator.demo.service.DiscountService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;

@@ -1,6 +1,5 @@
 package edu.accesa.internship.pricecomparator.demo.importer;
 
-import edu.accesa.internship.pricecomparator.demo.dto.DiscountDTO;
 import edu.accesa.internship.pricecomparator.demo.model.Discount;
 import edu.accesa.internship.pricecomparator.demo.model.Product;
 import edu.accesa.internship.pricecomparator.demo.model.ProductPriceHistory;

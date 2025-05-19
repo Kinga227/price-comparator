@@ -4,6 +4,7 @@ import edu.accesa.internship.pricecomparator.demo.dto.ProductPriceHistoryDTO;
 import edu.accesa.internship.pricecomparator.demo.model.Product;
 import edu.accesa.internship.pricecomparator.demo.repository.ProductPriceHistoryRepository;
 import edu.accesa.internship.pricecomparator.demo.repository.ProductRepository;
+import edu.accesa.internship.pricecomparator.demo.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,30 +15,16 @@ import java.util.List;
 @RequestMapping("/api/products")
 public class ProductController {
 
-    private final ProductPriceHistoryRepository productPriceHistoryRepository;
-    private final ProductRepository productRepository;
+    private final ProductService productService;
 
     @GetMapping
     public List<Product> getAllProducts() {
-        return productRepository.findAll();
+        return productService.getAllProducts();
     }
 
     @GetMapping("/{productId}/price-history")
     public List<ProductPriceHistoryDTO> getPriceHistory(@PathVariable String productId) {
-        return productPriceHistoryRepository.findByProductIdOrderByDate(productId)
-                .stream()
-                .map(history -> new ProductPriceHistoryDTO(
-                        history.getName(),
-                        history.getDate(),
-                        history.getOriginalPrice(),
-                        history.getDiscountPercentage(),
-                        history.getDiscountedPrice(),
-                        history.getCurrency(),
-                        history.getStore(),
-                        history.getCategory(),
-                        history.getBrand()
-                ))
-                .toList();
+        return productService.getPriceHistory(productId);
     }
 
     @GetMapping("/price-history")
@@ -46,19 +33,6 @@ public class ProductController {
             @RequestParam(required = false) String category,
             @RequestParam(required = false) String brand
     ) {
-        return productPriceHistoryRepository.findByFilters(store, category, brand)
-                .stream()
-                .map(history -> new ProductPriceHistoryDTO(
-                        history.getName(),
-                        history.getDate(),
-                        history.getOriginalPrice(),
-                        history.getDiscountPercentage(),
-                        history.getDiscountedPrice(),
-                        history.getCurrency(),
-                        history.getStore(),
-                        history.getCategory(),
-                        history.getBrand()
-                ))
-                .toList();
+        return productService.getPriceHistoryByFilters(store, category, brand);
     }
 }
