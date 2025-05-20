@@ -2,8 +2,6 @@ package edu.accesa.internship.pricecomparator.demo.controller;
 
 import edu.accesa.internship.pricecomparator.demo.dto.ProductPriceHistoryDTO;
 import edu.accesa.internship.pricecomparator.demo.model.Product;
-import edu.accesa.internship.pricecomparator.demo.repository.ProductPriceHistoryRepository;
-import edu.accesa.internship.pricecomparator.demo.repository.ProductRepository;
 import edu.accesa.internship.pricecomparator.demo.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;

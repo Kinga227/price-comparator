@@ -6,6 +6,7 @@ import edu.accesa.internship.pricecomparator.demo.model.ProductPriceHistory;
 import edu.accesa.internship.pricecomparator.demo.repository.DiscountRepository;
 import edu.accesa.internship.pricecomparator.demo.repository.ProductPriceHistoryRepository;
 import edu.accesa.internship.pricecomparator.demo.repository.ProductRepository;
+import edu.accesa.internship.pricecomparator.demo.service.PriceAlertService;
 import jakarta.annotation.PostConstruct;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +33,7 @@ public class CSVImporter {
     private final ProductRepository productRepository;
     private final DiscountRepository discountRepository;
     private final ProductPriceHistoryRepository productPriceHistoryRepository;
+    private final PriceAlertService priceAlertService;
 
     private final String[] productFiles = {
             "classpath:data/kaufland_2025-05-01.csv",
@@ -133,6 +135,8 @@ public class CSVImporter {
 
         System.out.println("CSV data imported.");
 
+        List<ProductPriceHistory> priceHistoryList = new ArrayList<>();
+
         // save price history with discounts
         for (String productFile : productFiles) {
             String store = extractStoreName(productFile);
@@ -186,10 +190,13 @@ public class CSVImporter {
                         history.setDiscountedPrice(null);
                     }
 
+                    priceHistoryList.add(history);
                     productPriceHistoryRepository.save(history);
                 }
             }
         }
+
+        priceAlertService.checkAlerts(priceHistoryList);
     }
 
     private static Product getProduct(CSVRecord record, String id, String store) {
