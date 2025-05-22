@@ -1,17 +1,18 @@
 package edu.accesa.internship.pricecomparator.demo.service;
 
 import edu.accesa.internship.pricecomparator.demo.dto.ProductPriceHistoryDTO;
+import edu.accesa.internship.pricecomparator.demo.dto.ShoppingListDTO;
+import edu.accesa.internship.pricecomparator.demo.model.Discount;
 import edu.accesa.internship.pricecomparator.demo.model.Product;
 import edu.accesa.internship.pricecomparator.demo.repository.DiscountRepository;
 import edu.accesa.internship.pricecomparator.demo.repository.ProductPriceHistoryRepository;
 import edu.accesa.internship.pricecomparator.demo.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -86,5 +87,37 @@ public class ProductService {
                 .sorted(Comparator.comparingDouble(this::getUnitPrice))
                 .limit(5)
                 .toList();
+    }
+
+    public List<ShoppingListDTO> getOptimizedShoppingLists(List<String> basketProductIds) {
+        Map<String, List<Product>> groupedByStore = new HashMap<>();
+
+        for (String productId : basketProductIds) {
+            Product original = productRepository.findById(productId)
+                    .orElseThrow(() -> new IllegalArgumentException("Product not found: " + productId));
+
+            List<Product> alternatives = productRepository.findByName(original.getName());
+
+            Product best = alternatives.stream()
+                    .map(p -> {
+                        double price = p.getPrice();
+                        Optional<Discount> discountOptional = discountRepository
+                                .findFirstByProductIdAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
+                                        p.getId(), LocalDate.now(), LocalDate.now());
+                        if (discountOptional.isPresent()) {
+                            price = price * (1 - discountOptional.get().getPercentage() / 100.0);
+                        }
+                        return new AbstractMap.SimpleEntry<>(p, price);
+                    })
+                    .min(Comparator.comparingDouble(Map.Entry::getValue))
+                    .map(Map.Entry::getKey)
+                    .orElseThrow();
+
+            groupedByStore.computeIfAbsent(best.getStore(), k -> new ArrayList<>()).add(best);
+        }
+
+        return groupedByStore.entrySet().stream()
+                .map(e -> new ShoppingListDTO(e.getKey(), e.getValue()))
+                .collect(Collectors.toList());
     }
 }
