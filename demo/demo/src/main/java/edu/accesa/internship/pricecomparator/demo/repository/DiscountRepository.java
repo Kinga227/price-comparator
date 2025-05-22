@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface DiscountRepository extends JpaRepository<Discount, String> {
@@ -25,4 +26,6 @@ public interface DiscountRepository extends JpaRepository<Discount, String> {
         ORDER BY d.startDate DESC
     """)
     List<Discount> findNewDiscounts(@Param("yesterday") LocalDate yesterday, @Param("now") LocalDate now);
+
+    Optional<Discount> findFirstByProductIdAndStartDateLessThanEqualAndEndDateGreaterThanEqual(String productId, LocalDate now1, LocalDate now2);
 }

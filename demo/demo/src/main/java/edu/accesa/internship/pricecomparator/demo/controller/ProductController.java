@@ -33,4 +33,9 @@ public class ProductController {
     ) {
         return productService.getPriceHistoryByFilters(store, category, brand);
     }
+
+    @GetMapping("/{id}/recommendations")
+    public List<Product> getRecommendedProducts(@PathVariable String id) {
+        return productService.getRecommendedSubstitutes(id);
+    }
 }
