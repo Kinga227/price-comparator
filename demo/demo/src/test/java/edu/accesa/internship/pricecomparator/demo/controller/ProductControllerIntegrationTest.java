@@ -1,5 +1,6 @@
 package edu.accesa.internship.pricecomparator.demo.controller;
 
+import edu.accesa.internship.pricecomparator.demo.model.Discount;
 import edu.accesa.internship.pricecomparator.demo.model.Product;
 import edu.accesa.internship.pricecomparator.demo.model.ProductPriceHistory;
 import edu.accesa.internship.pricecomparator.demo.repository.DiscountRepository;
@@ -72,5 +73,37 @@ public class ProductControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isEmpty());
+    }
+
+    @Test
+    void getRecommendedSubstitutes_shouldReturnSortedByEffectivePrice() throws Exception {
+        Product original = new Product("p0", "Lapte", "lactate", "brand1",
+                1.0, "l", "RON", 10.0, "kaufland");
+
+        Product p1 = new Product("p1", "Lapte", "lactate", "brand2",
+                1.0, "l", "RON", 9.5, "kaufland");
+        Product p2 = new Product("p2", "Lapte", "lactate", "brand2",
+                1.0, "l", "RON", 12.0, "kaufland");
+        Product p3 = new Product("p3", "Lapte", "lactate", "brand2",
+                1.0, "l", "RON", 15.0, "kaufland");
+
+        productRepository.save(original);
+        productRepository.save(p1);
+        productRepository.save(p2);
+        productRepository.save(p3);
+
+        Discount d = new Discount();
+        d.setProduct(p2);
+        d.setPercentage(20);
+        d.setStartDate(LocalDate.now().minusDays(1));
+        d.setEndDate(LocalDate.now().plusDays(1));
+        discountRepository.save(d);
+
+        mockMvc.perform(get("/api/products/p0/recommendations")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value("p1"))
+                .andExpect(jsonPath("$[1].id").value("p2"))
+                .andExpect(jsonPath("$[2].id").value("p3"));
     }
 }

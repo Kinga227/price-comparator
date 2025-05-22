@@ -1,8 +1,10 @@
 package edu.accesa.internship.pricecomparator.demo.service;
 
 import edu.accesa.internship.pricecomparator.demo.dto.ProductPriceHistoryDTO;
+import edu.accesa.internship.pricecomparator.demo.model.Discount;
 import edu.accesa.internship.pricecomparator.demo.model.Product;
 import edu.accesa.internship.pricecomparator.demo.model.ProductPriceHistory;
+import edu.accesa.internship.pricecomparator.demo.repository.DiscountRepository;
 import edu.accesa.internship.pricecomparator.demo.repository.ProductPriceHistoryRepository;
 import edu.accesa.internship.pricecomparator.demo.repository.ProductRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -10,11 +12,15 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -25,6 +31,9 @@ public class ProductServiceTest {
 
     @Mock
     private ProductRepository productRepository;
+
+    @Mock
+    private DiscountRepository discountRepository;
 
     @InjectMocks
     private ProductService productService;
@@ -113,5 +122,49 @@ public class ProductServiceTest {
         assertTrue(result.isEmpty());
 
         verify(productPriceHistoryRepository).findByFilters("lidl", null, null);
+    }
+
+    private Discount createDiscount(Product product, int percentage) {
+        Discount d = new Discount();
+        d.setProduct(product);
+        d.setPercentage(percentage);
+        d.setStartDate(LocalDate.now().minusDays(1));
+        d.setEndDate(LocalDate.now().plusDays(1));
+        return d;
+    }
+
+    @Test
+    void getRecommendedSubstitutes_shouldReturnSortedByEffectiveUnitPrice() {
+        Product original = new Product("p1", "Lapte", null, null, 1,
+                "l", "RON", 10.0, "kaufland");
+
+        Product cheaper = new Product("p2", "Lapte", null, null, 1,
+                "l", "RON", 12.0, "lidl");
+        Product bigger = new Product("p3", "Lapte", null, null, 2,
+                "l", "RON", 11.5, "kaufland");
+        Product moreExpensive = new Product("p4", "Lapte", null, null, 1,
+                "l", "RON", 12.5, "profi");
+
+        when(productRepository.findById("p1")).thenReturn(Optional.of(original));
+        when(productRepository.findByName("Lapte")).thenReturn(List.of(original, cheaper, bigger, moreExpensive));
+
+        when(discountRepository.findFirstByProductIdAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
+                eq("p2"), any(LocalDate.class), any(LocalDate.class)))
+                .thenReturn(Optional.of(createDiscount(cheaper, 20)));
+
+        when(discountRepository.findFirstByProductIdAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
+                eq("p3"), any(LocalDate.class), any(LocalDate.class)))
+                .thenReturn(Optional.empty());
+
+        when(discountRepository.findFirstByProductIdAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
+                eq("p4"), any(LocalDate.class), any(LocalDate.class)))
+                .thenReturn(Optional.empty());
+
+        List<Product> result = productService.getRecommendedSubstitutes("p1");
+
+        assertEquals(3, result.size());
+        assertEquals("p3", result.get(0).getId());
+        assertEquals("p2", result.get(1).getId());
+        assertEquals("p4", result.get(2).getId());
     }
 }

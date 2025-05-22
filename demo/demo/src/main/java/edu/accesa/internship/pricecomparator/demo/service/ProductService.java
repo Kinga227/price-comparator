@@ -19,9 +19,7 @@ public class ProductService {
 
     private final ProductRepository productRepository;
     private final ProductPriceHistoryRepository productPriceHistoryRepository;
-
-    @Autowired
-    private DiscountRepository discountRepository;
+    private final DiscountRepository discountRepository;
 
     public List<Product> getAllProducts() {
         return productRepository.findAll();
@@ -83,6 +81,7 @@ public class ProductService {
         List<Product> sameNameProducts = productRepository.findByName(original.getName());
 
         return sameNameProducts.stream()
+                .filter(p -> !p.getId().equals(original.getId()))
                 .filter(p -> p.getPackageUnit().equalsIgnoreCase(original.getPackageUnit()))
                 .sorted(Comparator.comparingDouble(this::getUnitPrice))
                 .limit(5)
