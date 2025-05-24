@@ -90,34 +90,49 @@ public class ProductService {
     }
 
     public List<ShoppingListDTO> getOptimizedShoppingLists(List<String> basketProductIds) {
-        Map<String, List<Product>> groupedByStore = new HashMap<>();
+        Map<String, Map<String, Product>> storeToProducts = new HashMap<>();
 
         for (String productId : basketProductIds) {
             Product original = productRepository.findById(productId)
                     .orElseThrow(() -> new IllegalArgumentException("Product not found: " + productId));
 
+            // find alternatives
             List<Product> alternatives = productRepository.findByName(original.getName());
 
-            Product best = alternatives.stream()
-                    .map(p -> {
-                        double price = p.getPrice();
-                        Optional<Discount> discountOptional = discountRepository
-                                .findFirstByProductIdAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
-                                        p.getId(), LocalDate.now(), LocalDate.now());
-                        if (discountOptional.isPresent()) {
-                            price = price * (1 - discountOptional.get().getPercentage() / 100.0);
-                        }
-                        return new AbstractMap.SimpleEntry<>(p, price);
-                    })
-                    .min(Comparator.comparingDouble(Map.Entry::getValue))
-                    .map(Map.Entry::getKey)
-                    .orElseThrow();
+            Product bestProduct = null;
+            double bestPrice = Double.MAX_VALUE;
 
-            groupedByStore.computeIfAbsent(best.getStore(), k -> new ArrayList<>()).add(best);
+            // search for discounted prices among alternatives
+            for (Product p : alternatives) {
+                double price = p.getPrice();
+                Optional<Discount> discountOptional = discountRepository
+                        .findFirstByProductIdAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
+                                p.getId(), LocalDate.now(), LocalDate.now()
+                        );
+                if (discountOptional.isPresent()) {
+                    price = price * (1 - discountOptional.get().getPercentage() / 100.0);
+                }
+                if (price < bestPrice) {
+                    bestPrice = price;
+                    bestProduct = p;
+                }
+            }
+
+            // if there is no alternative
+            if (bestProduct == null) {
+                bestProduct = original;
+            }
+
+            storeToProducts
+                    .computeIfAbsent(bestProduct.getStore(), k -> new HashMap<>())
+                    .put(bestProduct.getId(), bestProduct);
         }
 
-        return groupedByStore.entrySet().stream()
-                .map(e -> new ShoppingListDTO(e.getKey(), e.getValue()))
-                .collect(Collectors.toList());
+        return storeToProducts.entrySet().stream()
+                .map(entry -> new ShoppingListDTO(
+                        entry.getKey(),
+                        new ArrayList<>(entry.getValue().values())
+                ))
+                .toList();
     }
 }
